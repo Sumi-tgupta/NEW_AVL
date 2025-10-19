@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AVL Tree Visualizer</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="header-left">
+                <h1 class="title">AVL Tree Visualizer</h1>
+                <nav class="nav-tabs">
+                    <button id="visualizerTab" class="nav-tab active">Visualizer</button>
+                    <button id="learnTab" class="nav-tab">Learn</button>
+                </nav>
+            </div>
+            <div class="theme-toggle">
+                <button id="themeToggle" class="theme-btn">
+                    <span class="sun-icon">☀️</span>
+                    <span class="moon-icon">🌙</span>
+                </button>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <!-- Visualizer Page -->
+            <div id="visualizerPage" class="page-content active">
+                <div class="left-panel">
+                    <div class="control-section">
+                        <h3>Controls</h3>
+                        
+                        <div class="input-group">
+                            <label for="inputValue">Enter value</label>
+                            <div class="input-buttons">
+                                <input type="number" id="inputValue" placeholder="Enter number">
+                                <button id="insertBtn" class="btn btn-primary">+ Insert</button>
+                                <button id="deleteBtn" class="btn btn-danger">- Delete</button>
+                            </div>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="searchValue">Search</label>
+                            <div class="input-buttons">
+                                <input type="number" id="searchValue" placeholder="Search value">
+                                <button id="searchBtn" class="btn btn-secondary">🔍 Search</button>
+                            </div>
+                        </div>
+
+                        <div class="traversal-section">
+                            <h4>Traversal Visualization</h4>
+                            <div class="traversal-controls">
+                                <button id="inOrderVisualBtn" class="btn btn-outline">🔍 In-order</button>
+                                <button id="preOrderVisualBtn" class="btn btn-outline">🔍 Pre-order</button>
+                                <button id="postOrderVisualBtn" class="btn btn-outline">🔍 Post-order</button>
+                            </div>
+                            <div class="traversal-playback" id="traversalPlayback" style="display: none;">
+                                <div class="playback-controls">
+                                    <button id="playBtn" class="btn btn-small">▶️ Play</button>
+                                    <button id="pauseBtn" class="btn btn-small">⏸️ Pause</button>
+                                    <button id="stepBtn" class="btn btn-small">⏭️ Step</button>
+                                    <button id="stopBtn" class="btn btn-small">⏹️ Stop</button>
+                                </div>
+                                <div class="speed-control">
+                                    <label for="speedSlider">Speed:</label>
+                                    <input type="range" id="speedSlider" min="100" max="2000" value="800" step="100">
+                                    <span id="speedValue">800ms</span>
+                                </div>
+                                <div class="traversal-progress">
+                                    <div class="progress-info">
+                                        <span id="currentStep">Step 0</span>
+                                        <span id="traversalResult"></span>
+                                    </div>
+                                    <div class="progress-bar">
+                                        <div id="progressFill" class="progress-fill"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="traversal-section">
+                            <h4>Quick Traversal</h4>
+                            <button id="inOrderBtn" class="btn btn-outline">In-order</button>
+                            <button id="preOrderBtn" class="btn btn-outline">Pre-order</button>
+                            <button id="postOrderBtn" class="btn btn-outline">Post-order</button>
+                        </div>
+
+                        <div class="operations-section">
+                            <h4>Operations</h4>
+                            <button id="randomBtn" class="btn btn-outline">🎲 Generate Random</button>
+                            <button id="exportBtn" class="btn btn-outline">📥 Export</button>
+                            <button id="importBtn" class="btn btn-outline">📤 Import</button>
+                            <button id="resetBtn" class="btn btn-outline">🔄 Reset</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="center-panel">
+                    <div class="tree-section">
+                        <h3>Tree Visualization</h3>
+                        <div id="treeContainer" class="tree-container">
+                            <div class="empty-state">
+                                <div class="tree-icon">🌳</div>
+                                <p>Your AVL tree will appear here</p>
+                                <p>Insert some nodes to get started!</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="right-panel">
+                    <div class="log-section">
+                        <h3>Activity Log</h3>
+                        <div id="activityLog" class="activity-log">
+                            <div class="log-entry empty">
+                                <span class="log-text">No activities yet</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Learn Page -->
+            <div id="learnPage" class="page-content">
+                <!-- Mobile Menu Button -->
+                <button id="mobileMenuToggle" class="mobile-menu-toggle">
+                    <span id="menuIcon">☰</span>
+                </button>
+                
+                <!-- Sidebar Overlay -->
+                <div id="sidebarOverlay" class="sidebar-overlay"></div>
+                
+                <div class="learn-container">
+                    <div class="learn-sidebar" id="learnSidebar">
+                        <h3>Topics</h3>
+                        <nav class="learn-nav">
+                            <a href="#what-is-avl" class="nav-link active">What is AVL Tree?</a>
+                            <a href="#history" class="nav-link">History & Origin</a>
+                            <a href="#properties" class="nav-link">Properties</a>
+                            <a href="#why-use" class="nav-link">Why Use AVL Trees?</a>
+                            <a href="#comparison" class="nav-link">BST vs AVL vs Red-Black</a>
+                            <a href="#rotations" class="nav-link">Rotations</a>
+                            <a href="#complexity" class="nav-link">Complexity Analysis</a>
+                            <a href="#applications" class="nav-link">Real Applications</a>
+                        </nav>
+                    </div>
+                    
+                    <div class="learn-content">
+                        <section id="what-is-avl" class="content-section">
+                            <h2>What is an AVL Tree?</h2>
+                            <div class="concept-box">
+                                <p>An <strong>AVL Tree</strong> (named after its inventors Adelson-Velsky and Landis) is a self-balancing binary search tree where the height difference between left and right subtrees of any node is at most 1.</p>
+                            </div>
+                            
+                            <h3>Key Characteristics:</h3>
+                            <ul class="feature-list">
+                                <li>🔢 <strong>Binary Search Tree Property</strong>: Left child < parent < Right child</li>
+                                <li>⚖️ <strong>Balance Factor</strong>: Height difference ≤ 1 for every node</li>
+                                <li>🔄 <strong>Self-Balancing</strong>: Automatically rebalances after insertions/deletions</li>
+                                <li>📏 <strong>Height-Guaranteed</strong>: O(log n) height ensures efficient operations</li>
+                            </ul>
+
+                            <div class="example-box">
+                                <h4>Balance Factor Formula:</h4>
+                                <div class="formula">
+                                    Balance Factor = Height(Left Subtree) - Height(Right Subtree)
+                                </div>
+                                <p>Valid values: -1, 0, or +1</p>
+                            </div>
+                        </section>
+
+                        <section id="history" class="content-section">
+                            <h2>History & Origin</h2>
+                            <div class="timeline">
+                                <div class="timeline-item">
+                                    <div class="year">1962</div>
+                                    <div class="event">
+                                        <h4>AVL Tree Invented</h4>
+                                        <p>Georgy Adelson-Velsky and Evgenii Landis published their paper "An algorithm for the organization of information" in the Soviet journal "Proceedings of the USSR Academy of Sciences."</p>
+                                    </div>
+                                </div>
+                                <div class="timeline-item">
+                                    <div class="year">1960s-1970s</div>
+                                    <div class="event">
+                                        <h4>Early Adoption</h4>
+                                        <p>AVL trees became one of the first widely used self-balancing binary search trees in computer science education and practical applications.</p>
+                                    </div>
+                                </div>
+                                <div class="timeline-item">
+                                    <div class="year">1972</div>
+                                    <div class="event">
+                                        <h4>Red-Black Trees</h4>
+                                        <p>Rudolf Bayer introduced red-black trees as an alternative to AVL trees with different balancing properties.</p>
+                                    </div>
+                                </div>
+                                <div class="timeline-item">
+                                    <div class="year">Modern Era</div>
+                                    <div class="event">
+                                        <h4>Continued Relevance</h4>
+                                        <p>AVL trees remain fundamental in computer science education and are used in systems where strict height guarantees are important.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section id="properties" class="content-section">
+                            <h2>AVL Tree Properties</h2>
+                            
+                            <div class="property-grid">
+                                <div class="property-card">
+                                    <h4>🎯 Balance Property</h4>
+                                    <p>For every node: |Height(left) - Height(right)| ≤ 1</p>
+                                    <div class="property-example">
+                                        <div class="mini-tree balanced">
+                                            <div class="node">5</div>
+                                            <div class="children">
+                                                <div class="node">3</div>
+                                                <div class="node">7</div>
+                                            </div>
+                                        </div>
+                                        <p class="balance-status">✅ Balanced</p>
+                                    </div>
+                                </div>
+
+                                <div class="property-card">
+                                    <h4>📏 Height Property</h4>
+                                    <p>Height ≤ 1.44 × log₂(n + 2) - 0.328</p>
+                                    <p class="property-note">This guarantees O(log n) operations</p>
+                                </div>
+
+                                <div class="property-card">
+                                    <h4>🔍 Search Property</h4>
+                                    <p>Maintains binary search tree ordering</p>
+                                    <ul class="mini-list">
+                                        <li>Left subtree: smaller values</li>
+                                        <li>Right subtree: larger values</li>
+                                        <li>No duplicates (typically)</li>
+                                    </ul>
+                                </div>
+
+                                <div class="property-card">
+                                    <h4>🔄 Rotation Property</h4>
+                                    <p>Four types of rotations maintain balance:</p>
+                                    <ul class="mini-list">
+                                        <li>LL Rotation (Right rotation)</li>
+                                        <li>RR Rotation (Left rotation)</li>
+                                        <li>LR Rotation (Left-Right)</li>
+                                        <li>RL Rotation (Right-Left)</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section id="why-use" class="content-section">
+                            <h2>Why Use AVL Trees?</h2>
+                            
+                            <div class="advantages-section">
+                                <h3>🎯 Key Advantages:</h3>
+                                
+                                <div class="advantage-item">
+                                    <div class="advantage-icon">⚡</div>
+                                    <div class="advantage-content">
+                                        <h4>Guaranteed Performance</h4>
+                                        <p>Strict height balance ensures O(log n) worst-case time complexity for all operations (search, insert, delete).</p>
+                                    </div>
+                                </div>
+
+                                <div class="advantage-item">
+                                    <div class="advantage-icon">🎯</div>
+                                    <div class="advantage-content">
+                                        <h4>Predictable Behavior</h4>
+                                        <p>Unlike regular BSTs that can degenerate to linked lists, AVL trees maintain consistent performance regardless of insertion order.</p>
+                                    </div>
+                                </div>
+
+                                <div class="advantage-item">
+                                    <div class="advantage-icon">📚</div>
+                                    <div class="advantage-content">
+                                        <h4>Educational Value</h4>
+                                        <p>Perfect for understanding tree rotations, balance factors, and self-balancing concepts fundamental to computer science.</p>
+                                    </div>
+                                </div>
+
+                                <div class="advantage-item">
+                                    <div class="advantage-icon">🔧</div>
+                                    <div class="advantage-content">
+                                        <h4>Memory Efficient</h4>
+                                        <p>Requires only one extra bit per node (balance factor) compared to regular BSTs.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="use-cases">
+                                <h3>🎯 Best Use Cases:</h3>
+                                <ul class="use-case-list">
+                                    <li><strong>Database Indexing:</strong> When read performance is critical</li>
+                                    <li><strong>Memory Management:</strong> Systems with limited memory overhead</li>
+                                    <li><strong>Real-time Systems:</strong> Where predictable performance is essential</li>
+                                    <li><strong>Educational Tools:</strong> Teaching data structures and algorithms</li>
+                                </ul>
+                            </div>
+                        </section>
+
+                        <section id="comparison" class="content-section">
+                            <h2>Tree Structure Comparison</h2>
+                            
+                            <div class="comparison-table">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Aspect</th>
+                                            <th>Binary Search Tree</th>
+                                            <th>AVL Tree</th>
+                                            <th>Red-Black Tree</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><strong>Balance Guarantee</strong></td>
+                                            <td>❌ None</td>
+                                            <td>✅ Strict (height diff ≤ 1)</td>
+                                            <td>✅ Relaxed (path length ≤ 2× shortest)</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Search Time</strong></td>
+                                            <td>O(n) worst case</td>
+                                            <td>O(log n) guaranteed</td>
+                                            <td>O(log n) guaranteed</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Insert Time</strong></td>
+                                            <td>O(n) worst case</td>
+                                            <td>O(log n) + rotations</td>
+                                            <td>O(log n) + color changes</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Delete Time</strong></td>
+                                            <td>O(n) worst case</td>
+                                            <td>O(log n) + rotations</td>
+                                            <td>O(log n) + color changes</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Rotations</strong></td>
+                                            <td>❌ None</td>
+                                            <td>⚡ Up to 2 rotations</td>
+                                            <td>⚡ Up to 3 rotations</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Memory</strong></td>
+                                            <td>📦 Minimal</td>
+                                            <td>📦 +1 bit (balance factor)</td>
+                                            <td>📦 +1 bit (color)</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Best For</strong></td>
+                                            <td>Simple applications</td>
+                                            <td>Read-heavy workloads</td>
+                                            <td>Insert/delete heavy</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="recommendation-box">
+                                <h3>🎓 Which Should Students Learn First?</h3>
+                                <div class="learning-path">
+                                    <div class="path-step recommended">
+                                        <div class="step-number">1</div>
+                                        <div class="step-content">
+                                            <h4>Binary Search Tree</h4>
+                                            <p>Start here to understand basic tree concepts, search operations, and the problems that arise from imbalance.</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="path-step recommended">
+                                        <div class="step-number">2</div>
+                                        <div class="step-content">
+                                            <h4>AVL Tree ⭐ <span class="recommended-badge">Most Important</span></h4>
+                                            <p><strong>Most crucial for students!</strong> AVL trees teach fundamental concepts of balance factors, rotations, and self-balancing that apply to all balanced trees.</p>
+                                            <div class="reasons">
+                                                <ul>
+                                                    <li>Clear balance rules (height difference ≤ 1)</li>
+                                                    <li>Easy to understand rotation logic</li>
+                                                    <li>Foundation for all self-balancing trees</li>
+                                                    <li>Practical and widely applicable</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="path-step">
+                                        <div class="step-number">3</div>
+                                        <div class="step-content">
+                                            <h4>Red-Black Tree</h4>
+                                            <p>Learn after AVL to understand alternative balancing strategies and see real-world implementations (like in many standard libraries).</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section id="rotations" class="content-section">
+                            <h2>Tree Rotations</h2>
+                            
+                            <div class="rotation-intro">
+                                <p>Rotations are the fundamental operations that maintain AVL tree balance. There are four types of rotations:</p>
+                            </div>
+
+                            <div class="rotations-grid">
+                                <div class="rotation-card">
+                                    <h4>LL Rotation (Right Rotation)</h4>
+                                    <div class="rotation-diagram">
+                                        <div class="before-tree">
+                                            <div class="tree-small">
+                                                <div class="node unbalanced">z</div>
+                                                <div class="children">
+                                                    <div class="node unbalanced">y</div>
+                                                    <div class="node">T3</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="rotation-arrow">→</div>
+                                        <div class="after-tree">
+                                            <div class="tree-small">
+                                                <div class="node balanced">y</div>
+                                                <div class="children">
+                                                    <div class="node">T1</div>
+                                                    <div class="node balanced">z</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <p><strong>When:</strong> Left subtree of left child is heavy</p>
+                                </div>
+
+                                <div class="rotation-card">
+                                    <h4>RR Rotation (Left Rotation)</h4>
+                                    <div class="rotation-diagram">
+                                        <div class="before-tree">
+                                            <div class="tree-small">
+                                                <div class="node unbalanced">z</div>
+                                                <div class="children">
+                                                    <div class="node">T1</div>
+                                                    <div class="node unbalanced">y</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="rotation-arrow">→</div>
+                                        <div class="after-tree">
+                                            <div class="tree-small">
+                                                <div class="node balanced">y</div>
+                                                <div class="children">
+                                                    <div class="node balanced">z</div>
+                                                    <div class="node">T3</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <p><strong>When:</strong> Right subtree of right child is heavy</p>
+                                </div>
+
+                                <div class="rotation-card">
+                                    <h4>LR Rotation (Left-Right)</h4>
+                                    <div class="rotation-diagram">
+                                        <div class="before-tree">
+                                            <div class="tree-small">
+                                                <div class="node unbalanced">z</div>
+                                                <div class="children">
+                                                    <div class="node unbalanced">x</div>
+                                                    <div class="node">T3</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="rotation-arrow">→</div>
+                                        <div class="after-tree">
+                                            <div class="tree-small">
+                                                <div class="node balanced">x</div>
+                                                <div class="children">
+                                                    <div class="node">y</div>
+                                                    <div class="node">z</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <p><strong>When:</strong> Right subtree of left child is heavy</p>
+                                </div>
+
+                                <div class="rotation-card">
+                                    <h4>RL Rotation (Right-Left)</h4>
+                                    <div class="rotation-diagram">
+                                        <div class="before-tree">
+                                            <div class="tree-small">
+                                                <div class="node unbalanced">z</div>
+                                                <div class="children">
+                                                    <div class="node">T1</div>
+                                                    <div class="node unbalanced">x</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="rotation-arrow">→</div>
+                                        <div class="after-tree">
+                                            <div class="tree-small">
+                                                <div class="node balanced">x</div>
+                                                <div class="children">
+                                                    <div class="node">z</div>
+                                                    <div class="node">y</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <p><strong>When:</strong> Left subtree of right child is heavy</p>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section id="complexity" class="content-section">
+                            <h2>Complexity Analysis</h2>
+                            
+                            <div class="complexity-grid">
+                                <div class="complexity-card">
+                                    <h4>⏱️ Time Complexity</h4>
+                                    <table class="complexity-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Operation</th>
+                                                <th>Best Case</th>
+                                                <th>Average Case</th>
+                                                <th>Worst Case</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>Search</td>
+                                                <td>O(log n)</td>
+                                                <td>O(log n)</td>
+                                                <td>O(log n)</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Insert</td>
+                                                <td>O(log n)</td>
+                                                <td>O(log n)</td>
+                                                <td>O(log n)</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Delete</td>
+                                                <td>O(log n)</td>
+                                                <td>O(log n)</td>
+                                                <td>O(log n)</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div class="complexity-card">
+                                    <h4>📏 Space Complexity</h4>
+                                    <div class="space-info">
+                                        <p><strong>Main Memory:</strong> O(n)</p>
+                                        <p><strong>Recursion Stack:</strong> O(log n)</p>
+                                        <p><strong>Auxiliary Space:</strong> O(1) per operation</p>
+                                    </div>
+                                </div>
+
+                                <div class="complexity-card">
+                                    <h4>📊 Height Analysis</h4>
+                                    <div class="height-formula">
+                                        <p><strong>Minimum Height:</strong> ⌊log₂ n⌋</p>
+                                        <p><strong>Maximum Height:</strong> ⌊1.44 × log₂(n + 2)⌋ - 0.328</p>
+                                        <p><strong>Fibonacci Relation:</strong> Maximum nodes in height h: F(h+2) - 1</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section id="applications" class="content-section">
+                            <h2>Real-World Applications</h2>
+                            
+                            <div class="applications-grid">
+                                <div class="application-card">
+                                    <div class="app-icon">🗄️</div>
+                                    <h4>Database Systems</h4>
+                                    <p>AVL trees are used in database indexing for fast data retrieval, especially in read-heavy databases where search performance is critical.</p>
+                                </div>
+
+                                <div class="application-card">
+                                    <div class="app-icon">💾</div>
+                                    <h4>Memory Management</h4>
+                                    <p>Operating systems use AVL trees for managing free memory blocks and efficient allocation/deallocation operations.</p>
+                                </div>
+
+                                <div class="application-card">
+                                    <div class="app-icon">📝</div>
+                                    <h4>File Systems</h4>
+                                    <p>Some file systems use AVL trees for directory structure management and maintaining file metadata efficiently.</p>
+                                </div>
+
+                                <div class="application-card">
+                                    <div class="app-icon">🎮</div>
+                                    <h4>Game Development</h4>
+                                    <p>Used in game engines for spatial partitioning, collision detection, and managing game object hierarchies.</p>
+                                </div>
+
+                                <div class="application-card">
+                                    <div class="app-icon">🌐</div>
+                                    <h4>Network Routing</h4>
+                                    <p>Network routers use AVL trees for routing table management and efficient IP address lookups.</p>
+                                </div>
+
+                                <div class="application-card">
+                                    <div class="app-icon">📚</div>
+                                    <h4>Compilers</h4>
+                                    <p>Symbol tables in compilers often use AVL trees for efficient identifier lookup and management.</p>
+                                </div>
+                            </div>
+
+                            <div class="key-takeaway">
+                                <h3>🎯 Key Takeaway for Students</h3>
+                                <p>AVL trees are <strong>essential</strong> for computer science students because they:</p>
+                                <ol class="takeaway-list">
+                                    <li><strong>Teach Balance Concepts:</strong> Understanding why balance matters in data structures</li>
+                                    <li><strong>Problem-Solving Skills:</strong> Learning to detect and fix imbalance through rotations</li>
+                                    <li><strong>Algorithm Design:</strong> Seeing how local changes (rotations) affect global structure</li>
+                                    <li><strong>Performance Analysis:</strong> Understanding worst-case vs average-case behavior</li>
+                                    <li><strong>Foundation Learning:</strong> Concepts apply to advanced structures like B-trees and skip lists</li>
+                                </ol>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <input type="file" id="fileInput" accept=".json" style="display: none;">
+    
+    <!-- Node Properties Modal -->
+    <div id="nodeModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Node Properties</h3>
+                <button class="modal-close" id="closeModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="property-group">
+                    <h4>Basic Information</h4>
+                    <div class="property-item">
+                        <label>Value:</label>
+                        <span id="nodeValue">-</span>
+                    </div>
+                    <div class="property-item">
+                        <label>Height:</label>
+                        <span id="nodeHeight">-</span>
+                    </div>
+                    <div class="property-item">
+                        <label>Depth:</label>
+                        <span id="nodeDepth">-</span>
+                    </div>
+                    <div class="property-item">
+                        <label>Balance Factor:</label>
+                        <span id="nodeBalance">-</span>
+                    </div>
+                </div>
+                
+                <div class="property-group">
+                    <h4>Subtree Information</h4>
+                    <div class="property-item">
+                        <label>Subtree Size:</label>
+                        <span id="subtreeSize">-</span>
+                    </div>
+                    <div class="property-item">
+                        <label>Left Child:</label>
+                        <span id="leftChild">None</span>
+                    </div>
+                    <div class="property-item">
+                        <label>Right Child:</label>
+                        <span id="rightChild">None</span>
+                    </div>
+                    <div class="property-item">
+                        <label>Parent:</label>
+                        <span id="parentNode">None</span>
+                    </div>
+                </div>
+                
+                <div class="property-group">
+                    <h4>Subtree Range</h4>
+                    <div class="property-item">
+                        <label>Minimum Value:</label>
+                        <span id="minValue">-</span>
+                    </div>
+                    <div class="property-item">
+                        <label>Maximum Value:</label>
+                        <span id="maxValue">-</span>
+                    </div>
+                </div>
+                
+                <div class="property-group">
+                    <h4>Position</h4>
+                    <div class="property-item">
+                        <label>Is Root:</label>
+                        <span id="isRoot">No</span>
+                    </div>
+                    <div class="property-item">
+                        <label>Is Leaf:</label>
+                        <span id="isLeaf">No</span>
+                    </div>
+                    <div class="property-item">
+                        <label>Position:</label>
+                        <span id="nodePosition">-</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
