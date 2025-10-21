@@ -72,6 +72,48 @@ class AVLTree {
         }
     }
 
+    createNode(value) {
+        return { value, left: null, right: null, height: 1 };
+    }
+
+    getInsertionSteps(value, path) {
+        const steps = [
+            `Step 1: Start at root node`,
+            ...path.map((node, index) => 
+                `Step ${index + 2}: Compare ${value} with ${node} → ${value < node ? 'Go Left' : 'Go Right'}`
+            ),
+            `Step ${path.length + 2}: Insert ${value} at leaf position`,
+            `Step ${path.length + 3}: Update heights along insertion path`,
+            `Step ${path.length + 4}: Check balance factors and rotate if needed`
+        ];
+        return steps;
+    }
+
+    getDeletionSteps(value, path) {
+        const steps = [
+            `Step 1: Start at root node to find ${value}`,
+            ...path.map((node, index) => 
+                `Step ${index + 2}: Compare ${value} with ${node} → ${value < node ? 'Go Left' : 'Go Right'}`
+            ),
+            `Step ${path.length + 2}: Found node ${value} to delete`,
+            `Step ${path.length + 3}: Determine deletion case (0, 1, or 2 children)`,
+            `Step ${path.length + 4}: Perform deletion and restructuring`,
+            `Step ${path.length + 5}: Update heights and rebalance if needed`
+        ];
+        return steps;
+    }
+
+    logOperation(action, description, details = {}, type = 'info') {
+        this.operationLog.push({
+            id: Math.random().toString(36).substr(2, 9),
+            action,
+            description,
+            details,
+            timestamp: new Date(),
+            type
+        });
+    }
+
     rotateRight(y) {
         const x = y.left;
         const T2 = x.right;
@@ -91,8 +133,9 @@ class AVLTree {
             newRoot: x.value,
             before: `Tree was unbalanced at node ${y.value}`,
             after: `Node ${x.value} is now the root of this subtree`,
-            algorithm: `1. Store left child (x) of y\n2. Make right child of x (T2) as left child of y\n3. Make y as right child of x\n4. Update heights of y and x`
-        });
+            algorithm: `LL Case Detection:\nBalance Factor = ${this.getBalance(y)} > 1\nSolution: Single right rotation\n1. Make left child (x) the new root\n2. Make current node (y) the right child of x\n3. Move x's right child to y's left`,
+            complexity: 'O(1)'
+        }, 'warning');
 
         return x;
     }
@@ -116,8 +159,9 @@ class AVLTree {
             newRoot: y.value,
             before: `Tree was unbalanced at node ${x.value}`,
             after: `Node ${y.value} is now the root of this subtree`,
-            algorithm: `1. Store right child (y) of x\n2. Make left child of y (T2) as right child of x\n3. Make x as left child of y\n4. Update heights of x and y`
-        });
+            algorithm: `RR Case Detection:\nBalance Factor = ${this.getBalance(x)} < -1\nSolution: Single left rotation\n1. Make right child (y) the new root\n2. Make current node (x) the left child of y\n3. Move y's left child to x's right`,
+            complexity: 'O(1)'
+        }, 'warning');
 
         return y;
     }
@@ -128,54 +172,58 @@ class AVLTree {
 
         // Left Left Case
         if (balance > 1 && this.getBalance(node.left) >= 0) {
-            this.logOperation('LL Case', `Left-Left imbalance detected at node ${node.value}`, {
+            this.logOperation('LL Case', `Left-Left imbalance at node ${node.value}`, {
                 type: 'balance',
                 caseType: 'LL',
                 node: node.value,
                 balanceFactor: balance,
                 solution: 'Single right rotation required',
-                algorithm: `Balance Factor > 1 and left child balance >= 0\nThis is a Left-Left case requiring right rotation`
-            });
+                algorithm: `Balance Factor > 1 and left child balance >= 0\nThis is a Left-Left case requiring right rotation`,
+                complexity: 'O(1)'
+            }, 'warning');
             return this.rotateRight(node);
         }
 
         // Right Right Case
         if (balance < -1 && this.getBalance(node.right) <= 0) {
-            this.logOperation('RR Case', `Right-Right imbalance detected at node ${node.value}`, {
+            this.logOperation('RR Case', `Right-Right imbalance at node ${node.value}`, {
                 type: 'balance',
                 caseType: 'RR',
                 node: node.value,
                 balanceFactor: balance,
                 solution: 'Single left rotation required',
-                algorithm: `Balance Factor < -1 and right child balance <= 0\nThis is a Right-Right case requiring left rotation`
-            });
+                algorithm: `Balance Factor < -1 and right child balance <= 0\nThis is a Right-Right case requiring left rotation`,
+                complexity: 'O(1)'
+            }, 'warning');
             return this.rotateLeft(node);
         }
 
         // Left Right Case
         if (balance > 1 && this.getBalance(node.left) < 0) {
-            this.logOperation('LR Case', `Left-Right imbalance detected at node ${node.value}`, {
+            this.logOperation('LR Case', `Left-Right imbalance at node ${node.value}`, {
                 type: 'balance',
                 caseType: 'LR',
                 node: node.value,
                 balanceFactor: balance,
                 solution: 'Left rotation on left child, then right rotation on node',
-                algorithm: `Balance Factor > 1 and left child balance < 0\nThis is a Left-Right case requiring:\n1. Left rotation on left child\n2. Right rotation on current node`
-            });
+                algorithm: `Balance Factor > 1 and left child balance < 0\nThis is a Left-Right case requiring:\n1. Left rotation on left child\n2. Right rotation on current node`,
+                complexity: 'O(1)'
+            }, 'warning');
             node.left = this.rotateLeft(node.left);
             return this.rotateRight(node);
         }
 
         // Right Left Case
         if (balance < -1 && this.getBalance(node.right) > 0) {
-            this.logOperation('RL Case', `Right-Left imbalance detected at node ${node.value}`, {
+            this.logOperation('RL Case', `Right-Left imbalance at node ${node.value}`, {
                 type: 'balance',
                 caseType: 'RL',
                 node: node.value,
                 balanceFactor: balance,
                 solution: 'Right rotation on right child, then left rotation on node',
-                algorithm: `Balance Factor < -1 and right child balance > 0\nThis is a Right-Left case requiring:\n1. Right rotation on right child\n2. Left rotation on current node`
-            });
+                algorithm: `Balance Factor < -1 and right child balance > 0\nThis is a Right-Left case requiring:\n1. Right rotation on right child\n2. Left rotation on current node`,
+                complexity: 'O(1)'
+            }, 'warning');
             node.right = this.rotateRight(node.right);
             return this.rotateLeft(node);
         }
@@ -183,16 +231,20 @@ class AVLTree {
         return node;
     }
 
-    insert(node, value) {
+    insert(node, value, path = []) {
         if (!node) {
             this.logOperation('Insert', `Inserted new node with value ${value}`, {
                 type: 'insert',
                 value: value,
                 position: 'leaf',
-                algorithm: `1. Reached null position - perfect spot for new node\n2. Created new node with value ${value}\n3. Initial height set to 1\n4. Balance factor = 0 (no children)`
-            });
+                algorithm: this.getInsertionSteps(value, path).join('\n'),
+                complexity: 'O(log n)',
+                steps: this.getInsertionSteps(value, path)
+            }, 'success');
             return { value, left: null, right: null, height: 1 };
         }
+
+        const newPath = [...path, node.value];
 
         if (value < node.value) {
             this.logOperation('Insert Navigation', `Going left from node ${node.value} to insert ${value}`, {
@@ -200,24 +252,27 @@ class AVLTree {
                 direction: 'left',
                 from: node.value,
                 target: value,
-                algorithm: `Value ${value} < ${node.value}\nTraversing to left subtree`
-            });
-            node.left = this.insert(node.left, value);
+                algorithm: `Value ${value} < ${node.value}\nTraversing to left subtree`,
+                complexity: 'O(1)'
+            }, 'info');
+            node.left = this.insert(node.left, value, newPath);
         } else if (value > node.value) {
             this.logOperation('Insert Navigation', `Going right from node ${node.value} to insert ${value}`, {
                 type: 'navigation',
                 direction: 'right',
                 from: node.value,
                 target: value,
-                algorithm: `Value ${value} > ${node.value}\nTraversing to right subtree`
-            });
-            node.right = this.insert(node.right, value);
+                algorithm: `Value ${value} > ${node.value}\nTraversing to right subtree`,
+                complexity: 'O(1)'
+            }, 'info');
+            node.right = this.insert(node.right, value, newPath);
         } else {
             this.logOperation('Duplicate', `Value ${value} already exists in tree`, {
                 type: 'duplicate',
                 value: value,
-                algorithm: `Duplicate values are not allowed in BST\nIgnoring insertion of ${value}`
-            });
+                algorithm: `Duplicate values are not allowed in BST\nIgnoring insertion of ${value}`,
+                complexity: 'O(log n)'
+            }, 'warning');
             return node;
         }
 
@@ -231,16 +286,19 @@ class AVLTree {
         return node;
     }
 
-    deleteNode(node, value) {
+    deleteNode(node, value, path = []) {
         if (!node) {
             this.logOperation('Delete Failed', `Value ${value} not found in tree`, {
                 type: 'delete',
                 value: value,
                 success: false,
-                algorithm: `Reached null node - value ${value} doesn't exist in tree`
-            });
+                algorithm: `Reached null node - value ${value} doesn't exist in tree`,
+                complexity: 'O(log n)'
+            }, 'error');
             return null;
         }
+
+        const newPath = [...path, node.value];
 
         if (value < node.value) {
             this.logOperation('Delete Navigation', `Going left from node ${node.value} to delete ${value}`, {
@@ -248,34 +306,38 @@ class AVLTree {
                 direction: 'left',
                 from: node.value,
                 target: value,
-                algorithm: `Value ${value} < ${node.value}\nTraversing to left subtree for deletion`
-            });
-            node.left = this.deleteNode(node.left, value);
+                algorithm: `Value ${value} < ${node.value}\nTraversing to left subtree for deletion`,
+                complexity: 'O(1)'
+            }, 'info');
+            node.left = this.deleteNode(node.left, value, newPath);
         } else if (value > node.value) {
             this.logOperation('Delete Navigation', `Going right from node ${node.value} to delete ${value}`, {
                 type: 'navigation',
                 direction: 'right',
                 from: node.value,
                 target: value,
-                algorithm: `Value ${value} > ${node.value}\nTraversing to right subtree for deletion`
-            });
-            node.right = this.deleteNode(node.right, value);
+                algorithm: `Value ${value} > ${node.value}\nTraversing to right subtree for deletion`,
+                complexity: 'O(1)'
+            }, 'info');
+            node.right = this.deleteNode(node.right, value, newPath);
         } else {
             // Node to be deleted found
             this.logOperation('Delete Found', `Found node ${value} to delete`, {
                 type: 'delete',
                 value: value,
                 success: true,
-                algorithm: `Found target node ${value}\nDetermining deletion case...`
-            });
+                algorithm: `Found target node ${value}\nDetermining deletion case...`,
+                complexity: 'O(log n)'
+            }, 'info');
 
             if (!node.left) {
                 this.logOperation('Delete Case 1', `Node ${value} has no left child`, {
                     type: 'delete',
                     case: 'no-left',
                     value: value,
-                    algorithm: `Case 1: Node has no left child\nReplace node with its right child\nRight child might be null`
-                });
+                    algorithm: `Case 1: Node has no left child\nReplace node with its right child\nRight child might be null`,
+                    complexity: 'O(1)'
+                }, 'info');
                 return node.right;
             }
             if (!node.right) {
@@ -283,8 +345,9 @@ class AVLTree {
                     type: 'delete',
                     case: 'no-right',
                     value: value,
-                    algorithm: `Case 2: Node has no right child\nReplace node with its left child`
-                });
+                    algorithm: `Case 2: Node has no right child\nReplace node with its left child`,
+                    complexity: 'O(1)'
+                }, 'info');
                 return node.left;
             }
 
@@ -295,33 +358,38 @@ class AVLTree {
                 case: 'two-children',
                 value: value,
                 replacement: temp.value,
-                algorithm: `Case 3: Node has two children\n1. Find inorder successor (minimum in right subtree)\n2. Replace node value with successor value\n3. Delete the successor node\n4. Balance the tree`
-            });
+                algorithm: `Case 3: Node has two children\n1. Find inorder successor (minimum in right subtree)\n2. Replace node value with successor value\n3. Delete the successor node\n4. Balance the tree`,
+                complexity: 'O(log n)'
+            }, 'info');
             node.value = temp.value;
-            node.right = this.deleteNode(node.right, temp.value);
+            node.right = this.deleteNode(node.right, temp.value, newPath);
         }
 
         return node ? this.balanceNode(node) : null;
     }
 
-    search(node, value) {
+    search(node, value, path = []) {
         if (!node) {
             this.logOperation('Search Failed', `Value ${value} not found in tree`, {
                 type: 'search',
                 value: value,
                 found: false,
-                algorithm: `Reached null node - value ${value} doesn't exist in tree\nSearch path exhausted`
-            });
+                algorithm: `Reached null node - value ${value} doesn't exist in tree\nSearch path exhausted`,
+                complexity: 'O(log n)'
+            }, 'error');
             return false;
         }
+
+        const currentPath = [...path, node.value];
 
         if (value === node.value) {
             this.logOperation('Search Success', `Found value ${value} in tree`, {
                 type: 'search',
                 value: value,
                 found: true,
-                algorithm: `Found target node with value ${value}\nSearch successful!`
-            });
+                algorithm: `Found target node with value ${value}\nSearch successful!`,
+                complexity: 'O(log n)'
+            }, 'success');
             return true;
         }
 
@@ -331,18 +399,20 @@ class AVLTree {
                 direction: 'left',
                 from: node.value,
                 target: value,
-                algorithm: `Value ${value} < ${node.value}\nTraversing to left subtree`
-            });
-            return this.search(node.left, value);
+                algorithm: `Value ${value} < ${node.value}\nTraversing to left subtree`,
+                complexity: 'O(1)'
+            }, 'info');
+            return this.search(node.left, value, currentPath);
         } else {
             this.logOperation('Search Navigation', `Going right from node ${node.value} searching for ${value}`, {
                 type: 'navigation',
                 direction: 'right',
                 from: node.value,
                 target: value,
-                algorithm: `Value ${value} > ${node.value}\nTraversing to right subtree`
-            });
-            return this.search(node.right, value);
+                algorithm: `Value ${value} > ${node.value}\nTraversing to right subtree`,
+                complexity: 'O(1)'
+            }, 'info');
+            return this.search(node.right, value, currentPath);
         }
     }
 
@@ -374,15 +444,6 @@ class AVLTree {
         result.push(node.value);
         
         return result;
-    }
-
-    logOperation(action, description, details = {}) {
-        this.operationLog.push({
-            action,
-            description,
-            details,
-            timestamp: new Date()
-        });
     }
 
     clearLog() {
@@ -470,8 +531,9 @@ class TraversalAnimator {
             `Starting step-by-step ${type} traversal visualization`, {
                 type: 'traversal',
                 method: type,
-                algorithm: `${type.charAt(0).toUpperCase() + type.slice(1)} Traversal:\n${this.getTraversalAlgorithm(type)}`
-            });
+                algorithm: `${type.charAt(0).toUpperCase() + type.slice(1)} Traversal:\n${this.getTraversalAlgorithm(type)}`,
+                complexity: 'O(n)'
+            }, 'info');
         this.treeUI.displayLogs();
         
         this.animate();
@@ -538,8 +600,9 @@ class TraversalAnimator {
             step: this.currentStep + 1,
             node: step.node,
             result: visitedNodes,
-            algorithm: step.algorithm
-        });
+            algorithm: step.algorithm,
+            complexity: 'O(1)'
+        }, 'info');
         this.treeUI.displayLogs();
     }
 
@@ -611,8 +674,9 @@ class TraversalAnimator {
                 type: 'traversal',
                 method: this.currentTraversal,
                 result: result,
-                algorithm: `Traversal was stopped manually at step ${this.currentStep}`
-            });
+                algorithm: `Traversal was stopped manually at step ${this.currentStep}`,
+                complexity: 'O(1)'
+            }, 'warning');
             this.treeUI.displayLogs();
         }
     }
@@ -631,8 +695,9 @@ class TraversalAnimator {
                 type: 'traversal',
                 method: this.currentTraversal,
                 result: result,
-                algorithm: `${this.currentTraversal.charAt(0).toUpperCase() + this.currentTraversal.slice(1)} traversal completed successfully!\nFinal result: [${result.join(', ')}]`
-            });
+                algorithm: `${this.currentTraversal.charAt(0).toUpperCase() + this.currentTraversal.slice(1)} traversal completed successfully!\nFinal result: [${result.join(', ')}]`,
+                complexity: 'O(n)'
+            }, 'success');
         this.treeUI.displayLogs();
         
         // Auto-hide after 3 seconds
@@ -655,6 +720,10 @@ class AVLTreeUI {
         this.highlightedNode = null;
         this.selectedNode = null;
         this.traversalAnimator = new TraversalAnimator(this);
+        this.zoom = 1;
+        this.pan = { x: 0, y: 0 };
+        this.isDragging = false;
+        this.dragStart = { x: 0, y: 0 };
         this.init();
     }
 
@@ -664,6 +733,7 @@ class AVLTreeUI {
         this.setupModal();
         this.setupTraversalControls();
         this.initializeNavigation();
+        this.setupZoomControls();
         this.render();
     }
 
@@ -719,8 +789,9 @@ class AVLTreeUI {
                 type: 'traversal',
                 method: 'in-order',
                 result: result,
-                algorithm: `In-order Traversal Algorithm:\n1. Traverse left subtree\n2. Visit root node\n3. Traverse right subtree\nResult: Left -> Root -> Right`
-            });
+                algorithm: `In-order Traversal Algorithm:\n1. Traverse left subtree\n2. Visit root node\n3. Traverse right subtree\nResult: Left -> Root -> Right`,
+                complexity: 'O(n)'
+            }, 'info');
             this.displayLogs();
         });
 
@@ -730,8 +801,9 @@ class AVLTreeUI {
                 type: 'traversal',
                 method: 'pre-order',
                 result: result,
-                algorithm: `Pre-order Traversal Algorithm:\n1. Visit root node\n2. Traverse left subtree\n3. Traverse right subtree\nResult: Root -> Left -> Right`
-            });
+                algorithm: `Pre-order Traversal Algorithm:\n1. Visit root node\n2. Traverse left subtree\n3. Traverse right subtree\nResult: Root -> Left -> Right`,
+                complexity: 'O(n)'
+            }, 'info');
             this.displayLogs();
         });
 
@@ -741,8 +813,9 @@ class AVLTreeUI {
                 type: 'traversal',
                 method: 'post-order',
                 result: result,
-                algorithm: `Post-order Traversal Algorithm:\n1. Traverse left subtree\n2. Traverse right subtree\n3. Visit root node\nResult: Left -> Right -> Root`
-            });
+                algorithm: `Post-order Traversal Algorithm:\n1. Traverse left subtree\n2. Traverse right subtree\n3. Visit root node\nResult: Left -> Right -> Root`,
+                complexity: 'O(n)'
+            }, 'info');
             this.displayLogs();
         });
 
@@ -752,8 +825,9 @@ class AVLTreeUI {
             this.tree.logOperation('Generate Random', `Creating tree with values: [${values.join(', ')}]`, {
                 type: 'generate',
                 values: values,
-                algorithm: `Random Tree Generation:\n1. Generated 10 random values (0-99)\n2. Inserting values one by one\n3. Tree will auto-balance after each insertion`
-            });
+                algorithm: `Random Tree Generation:\n1. Generated 10 random values (0-99)\n2. Inserting values one by one\n3. Tree will auto-balance after each insertion`,
+                complexity: 'O(n log n)'
+            }, 'info');
             
             this.tree.root = null;
             values.forEach(value => {
@@ -768,8 +842,9 @@ class AVLTreeUI {
                 this.tree.logOperation('Export Failed', 'Tree is empty', {
                     type: 'export',
                     success: false,
-                    algorithm: `Cannot export an empty tree\nInsert some nodes first`
-                });
+                    algorithm: `Cannot export an empty tree\nInsert some nodes first`,
+                    complexity: 'O(1)'
+                }, 'error');
                 this.displayLogs();
                 return;
             }
@@ -788,8 +863,9 @@ class AVLTreeUI {
                 type: 'export',
                 success: true,
                 values: values,
-                algorithm: `Export Algorithm:\n1. Perform in-order traversal to get sorted values\n2. Convert to JSON format\n3. Create downloadable file\n4. File contains array of node values`
-            });
+                algorithm: `Export Algorithm:\n1. Perform in-order traversal to get sorted values\n2. Convert to JSON format\n3. Create downloadable file\n4. File contains array of node values`,
+                complexity: 'O(n)'
+            }, 'success');
             this.displayLogs();
         });
 
@@ -808,8 +884,9 @@ class AVLTreeUI {
                     this.tree.logOperation('Import Start', `Importing values: [${values.join(', ')}]`, {
                         type: 'import',
                         values: values,
-                        algorithm: `Import Algorithm:\n1. Parse JSON file\n2. Validate array of numbers\n3. Clear existing tree\n4. Insert each value with auto-balancing`
-                    });
+                        algorithm: `Import Algorithm:\n1. Parse JSON file\n2. Validate array of numbers\n3. Clear existing tree\n4. Insert each value with auto-balancing`,
+                        complexity: 'O(n log n)'
+                    }, 'info');
                     
                     this.tree.root = null;
                     values.forEach(value => {
@@ -824,8 +901,9 @@ class AVLTreeUI {
                         type: 'import',
                         success: false,
                         error: error.message,
-                        algorithm: `Import failed due to:\n1. Invalid JSON format\n2. File doesn't contain array of numbers\n3. Corrupted file data`
-                    });
+                        algorithm: `Import failed due to:\n1. Invalid JSON format\n2. File doesn't contain array of numbers\n3. Corrupted file data`,
+                        complexity: 'O(1)'
+                    }, 'error');
                     this.displayLogs();
                 }
             };
@@ -842,8 +920,9 @@ class AVLTreeUI {
             this.displayLogs();
             this.tree.logOperation('Tree Reset', 'Tree has been cleared', {
                 type: 'reset',
-                algorithm: `Reset Algorithm:\n1. Set root to null\n2. Clear operation log\n3. Clear any highlighted nodes\n4. Re-render empty tree`
-            });
+                algorithm: `Reset Algorithm:\n1. Set root to null\n2. Clear operation log\n3. Clear any highlighted nodes\n4. Re-render empty tree`,
+                complexity: 'O(1)'
+            }, 'info');
             this.displayLogs();
         });
 
@@ -976,6 +1055,69 @@ class AVLTreeUI {
         });
     }
 
+    setupZoomControls() {
+        const container = document.getElementById('treeContainer');
+        
+        // Zoom buttons
+        document.getElementById('zoomInBtn').addEventListener('click', () => {
+            this.zoom = Math.min(this.zoom + 0.2, 3);
+            this.updateTransform();
+        });
+
+        document.getElementById('zoomOutBtn').addEventListener('click', () => {
+            this.zoom = Math.max(this.zoom - 0.2, 0.3);
+            this.updateTransform();
+        });
+
+        document.getElementById('resetViewBtn').addEventListener('click', () => {
+            this.zoom = 1;
+            this.pan = { x: 0, y: 0 };
+            this.updateTransform();
+        });
+
+        // Pan functionality
+        container.addEventListener('mousedown', (e) => {
+            this.isDragging = true;
+            this.dragStart = { x: e.clientX - this.pan.x, y: e.clientY - this.pan.y };
+            container.classList.add('dragging');
+        });
+
+        container.addEventListener('mousemove', (e) => {
+            if (this.isDragging) {
+                this.pan = {
+                    x: e.clientX - this.dragStart.x,
+                    y: e.clientY - this.dragStart.y
+                };
+                this.updateTransform();
+            }
+        });
+
+        container.addEventListener('mouseup', () => {
+            this.isDragging = false;
+            container.classList.remove('dragging');
+        });
+
+        container.addEventListener('mouseleave', () => {
+            this.isDragging = false;
+            container.classList.remove('dragging');
+        });
+
+        // Mouse wheel zoom
+        container.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const delta = e.deltaY > 0 ? -0.1 : 0.1;
+            this.zoom = Math.max(0.3, Math.min(3, this.zoom + delta));
+            this.updateTransform();
+        });
+    }
+
+    updateTransform() {
+        const svg = document.querySelector('#treeSvg');
+        if (svg) {
+            svg.style.transform = `translate(${this.pan.x}px, ${this.pan.y}px) scale(${this.zoom})`;
+        }
+    }
+
     render() {
         const container = document.getElementById('treeContainer');
         
@@ -1001,6 +1143,8 @@ class AVLTreeUI {
         svg.appendChild(g);
         container.innerHTML = '';
         container.appendChild(svg);
+
+        this.updateTransform();
     }
 
     renderNode(svgGroup, node, x, y, level) {
@@ -1057,15 +1201,37 @@ class AVLTreeUI {
         heightText.setAttribute('class', 'node-height');
         heightText.textContent = `h=${node.height}`;
 
+        const balanceText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        balanceText.setAttribute('y', '35');
+        balanceText.setAttribute('class', 'node-balance');
+        balanceText.textContent = `BF=${this.tree.getBalance(node)}`;
+
         g.appendChild(circle);
         g.appendChild(text);
         g.appendChild(heightText);
+        g.appendChild(balanceText);
         svgGroup.appendChild(g);
 
         // Add click event listener
         g.addEventListener('click', () => {
             this.showNodeProperties(node.value);
         });
+
+        // Add hover tooltip
+        const tooltip = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject');
+        tooltip.setAttribute('x', '30');
+        tooltip.setAttribute('y', '-20');
+        tooltip.setAttribute('width', '200');
+        tooltip.setAttribute('height', '100');
+        const tooltipDiv = document.createElement('div');
+        tooltipDiv.classList.add('tooltip');
+        tooltipDiv.innerHTML = `
+            Depth: ${this.tree.getDepth(this.tree.root, node.value)}<br>
+            Height: ${node.height}<br>
+            Balance: ${this.tree.getBalance(node)}
+        `;
+        tooltip.appendChild(tooltipDiv);
+        g.appendChild(tooltip);
     }
 
     displayLogs() {
@@ -1082,7 +1248,7 @@ class AVLTreeUI {
         }
 
         logContainer.innerHTML = logs.map(log => {
-            const logClass = this.getLogClass(log.details.type);
+            const logClass = this.getLogClass(log.type);
             const time = log.timestamp.toLocaleTimeString();
             
             return `
@@ -1095,6 +1261,9 @@ class AVLTreeUI {
                     ${log.details.algorithm ? `
                         <div class="log-algorithm">${log.details.algorithm}</div>
                     ` : ''}
+                    ${log.details.complexity ? `
+                        <div class="log-complexity">Complexity: <span>${log.details.complexity}</span></div>
+                    ` : ''}
                     <div class="log-time">${time}</div>
                 </div>
             `;
@@ -1103,8 +1272,8 @@ class AVLTreeUI {
 
     getLogClass(type) {
         switch (type) {
-            case 'insert': return 'info';
-            case 'delete': return 'danger';
+            case 'insert': return 'success';
+            case 'delete': return 'error';
             case 'search': return 'info';
             case 'rotation': return 'warning';
             case 'balance': return 'warning';
@@ -1112,8 +1281,10 @@ class AVLTreeUI {
             case 'traversal-step': return 'info';
             case 'export': return 'info';
             case 'import': return 'info';
-            case 'reset': return 'danger';
+            case 'reset': return 'error';
             case 'duplicate': return 'warning';
+            case 'generate': return 'info';
+            case 'navigation': return 'info';
             default: return '';
         }
     }

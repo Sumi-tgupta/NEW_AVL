@@ -99,11 +99,36 @@
                 <div class="center-panel">
                     <div class="tree-section">
                         <h3>Tree Visualization</h3>
+                        <div class="tree-header">
+                            <div class="zoom-controls">
+                                <button id="zoomOutBtn" class="btn btn-small">🔍-</button>
+                                <button id="zoomInBtn" class="btn btn-small">🔍+</button>
+                                <button id="resetViewBtn" class="btn btn-small">↻</button>
+                            </div>
+                        </div>
                         <div id="treeContainer" class="tree-container">
                             <div class="empty-state">
                                 <div class="tree-icon">🌳</div>
                                 <p>Your AVL tree will appear here</p>
                                 <p>Insert some nodes to get started!</p>
+                            </div>
+                        </div>
+                        <div class="tree-legend">
+                            <div class="legend-item">
+                                <div class="legend-color normal"></div>
+                                <span>Normal</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color highlighted"></div>
+                                <span>Highlighted</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color visited"></div>
+                                <span>Visited</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color current"></div>
+                                <span>Current</span>
                             </div>
                         </div>
                     </div>
