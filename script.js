@@ -512,7 +512,9 @@ class TraversalAnimator {
     }
 
     start(type) {
-        if (this.isRunning) return;
+        if (this.isRunning) {
+            this.stop();
+        }
         
         this.currentTraversal = type;
         this.traversalSteps = this.generateTraversalSteps(type);
@@ -520,225 +522,121 @@ class TraversalAnimator {
         this.isRunning = true;
         this.isPaused = false;
         
-        // Show playback controls
         document.getElementById('traversalPlayback').style.display = 'block';
-        
-        // Clear previous highlights
-        this.clearHighlights();
-        
-        // Log traversal start
-        this.treeUI.tree.logOperation(`${type.charAt(0).toUpperCase() + type.slice(1)} Visualization Started`, 
-            `Starting step-by-step ${type} traversal visualization`, {
-                type: 'traversal',
-                method: type,
-                algorithm: `${type.charAt(0).toUpperCase() + type.slice(1)} Traversal:\n${this.getTraversalAlgorithm(type)}`,
-                complexity: 'O(n)'
-            }, 'info');
-        this.treeUI.displayLogs();
-        
-        this.animate();
+        this.updateProgress();
+        this.runStep();
     }
 
-    getTraversalAlgorithm(type) {
-        switch (type) {
-            case 'in-order':
-                return '1. Traverse left subtree\n2. Visit root node\n3. Traverse right subtree\nResult: Left -> Root -> Right (Sorted order)';
-            case 'pre-order':
-                return '1. Visit root node\n2. Traverse left subtree\n3. Traverse right subtree\nResult: Root -> Left -> Right (Useful for copying trees)';
-            case 'post-order':
-                return '1. Traverse left subtree\n2. Traverse right subtree\n3. Visit root node\nResult: Left -> Right -> Root (Useful for deleting trees)';
-            default:
-                return '';
-        }
-    }
-
-    animate() {
-        if (!this.isRunning || this.isPaused) return;
-        
-        if (this.currentStep >= this.traversalSteps.length) {
-            this.complete();
+    runStep() {
+        if (!this.isRunning || this.isPaused || this.currentStep >= this.traversalSteps.length) {
+            if (this.currentStep >= this.traversalSteps.length) {
+                this.stop();
+            }
             return;
         }
         
         const step = this.traversalSteps[this.currentStep];
-        this.executeStep(step);
-        this.updateProgress();
+        this.treeUI.highlightedNode = step.action === 'visit' ? step.node : null;
+        this.treeUI.render();
         
-        this.currentStep++;
-        this.timeoutId = setTimeout(() => this.animate(), this.animationSpeed);
-    }
-
-    executeStep(step) {
-        // Clear previous current node highlight
-        this.clearCurrentHighlight();
+        this.treeUI.tree.logOperation(
+            `${this.currentTraversal.charAt(0).toUpperCase() + this.currentTraversal.slice(1)} Traversal`,
+            step.description,
+            {
+                type: 'traversal-step',
+                traversalType: this.currentTraversal,
+                algorithm: step.algorithm,
+                step: this.currentStep + 1,
+                complexity: 'O(n)'
+            },
+            'info'
+        );
         
-        // Highlight current node
-        const nodeElement = document.querySelector(`[data-node-value="${step.node}"]`);
-        if (nodeElement) {
-            nodeElement.classList.add('current');
-            
-            // Add visiting animation
-            setTimeout(() => {
-                nodeElement.classList.add('visiting');
-                setTimeout(() => {
-                    nodeElement.classList.remove('visiting');
-                    nodeElement.classList.add('visited');
-                }, 500);
-            }, 100);
-        }
-        
-        // Update step info
-        document.getElementById('currentStep').textContent = `Step ${this.currentStep + 1}: ${step.description}`;
-        
-        // Update result
-        const visitedNodes = this.traversalSteps.slice(0, this.currentStep + 1).map(s => s.node);
-        document.getElementById('traversalResult').textContent = `[${visitedNodes.join(', ')}]`;
-        
-        // Log step
-        this.treeUI.tree.logOperation('Traversal Step', step.description, {
-            type: 'traversal-step',
-            step: this.currentStep + 1,
-            node: step.node,
-            result: visitedNodes,
-            algorithm: step.algorithm,
-            complexity: 'O(1)'
-        }, 'info');
         this.treeUI.displayLogs();
-    }
-
-    clearHighlights() {
-        document.querySelectorAll('.tree-node').forEach(node => {
-            node.classList.remove('current', 'visiting', 'visited');
-        });
-        document.querySelectorAll('.tree-edge').forEach(edge => {
-            edge.classList.remove('traversal-path');
-        });
-    }
-
-    clearCurrentHighlight() {
-        document.querySelectorAll('.tree-node.current').forEach(node => {
-            node.classList.remove('current');
-        });
-    }
-
-    updateProgress() {
-        const progress = ((this.currentStep + 1) / this.traversalSteps.length) * 100;
-        document.getElementById('progressFill').style.width = `${progress}%`;
+        this.updateProgress();
+        this.currentStep++;
+        
+        this.timeoutId = setTimeout(() => this.runStep(), this.animationSpeed);
     }
 
     pause() {
         this.isPaused = true;
-        if (this.timeoutId) {
-            clearTimeout(this.timeoutId);
-        }
     }
 
     resume() {
-        if (!this.isRunning || !this.isPaused) return;
-        this.isPaused = false;
-        this.animate();
+        if (this.isPaused && this.isRunning) {
+            this.isPaused = false;
+            this.runStep();
+        }
     }
 
     step() {
-        if (!this.isRunning) return;
-        
-        this.pause();
-        if (this.currentStep < this.traversalSteps.length) {
-            const step = this.traversalSteps[this.currentStep];
-            this.executeStep(step);
-            this.updateProgress();
-            this.currentStep++;
+        if (!this.isRunning) {
+            this.start(this.currentTraversal || 'in-order');
+        } else if (!this.isPaused) {
+            this.pause();
         }
-        
-        if (this.currentStep >= this.traversalSteps.length) {
-            this.complete();
-        }
+        this.runStep();
     }
 
     stop() {
         this.isRunning = false;
         this.isPaused = false;
-        if (this.timeoutId) {
-            clearTimeout(this.timeoutId);
-        }
-        this.clearHighlights();
+        this.currentStep = 0;
+        this.traversalSteps = [];
+        this.treeUI.highlightedNode = null;
+        this.treeUI.render();
         document.getElementById('traversalPlayback').style.display = 'none';
-        document.getElementById('currentStep').textContent = 'Step 0';
-        document.getElementById('traversalResult').textContent = '';
-        document.getElementById('progressFill').style.width = '0%';
-        
-        // Log completion
-        if (this.currentTraversal) {
-            const result = this.traversalSteps.map(s => s.node);
-            this.treeUI.tree.logOperation('Traversal Stopped', `${this.currentTraversal} traversal stopped by user`, {
-                type: 'traversal',
-                method: this.currentTraversal,
-                result: result,
-                algorithm: `Traversal was stopped manually at step ${this.currentStep}`,
-                complexity: 'O(1)'
-            }, 'warning');
-            this.treeUI.displayLogs();
-        }
-    }
-
-    complete() {
-        this.isRunning = false;
-        
-        // Show final result
-        const result = this.traversalSteps.map(s => s.node);
-        document.getElementById('currentStep').textContent = `Complete!`;
-        document.getElementById('traversalResult').textContent = `Final: [${result.join(', ')}]`;
-        
-        // Log completion
-        this.treeUI.tree.logOperation(`${this.currentTraversal.charAt(0).toUpperCase() + this.currentTraversal.slice(1)} Complete`, 
-            `Traversal completed with result: [${result.join(', ')}]`, {
-                type: 'traversal',
-                method: this.currentTraversal,
-                result: result,
-                algorithm: `${this.currentTraversal.charAt(0).toUpperCase() + this.currentTraversal.slice(1)} traversal completed successfully!\nFinal result: [${result.join(', ')}]`,
-                complexity: 'O(n)'
-            }, 'success');
-        this.treeUI.displayLogs();
-        
-        // Auto-hide after 3 seconds
-        setTimeout(() => {
-            if (!this.isRunning) {
-                document.getElementById('traversalPlayback').style.display = 'none';
-            }
-        }, 3000);
+        clearTimeout(this.timeoutId);
+        this.updateProgress();
     }
 
     setSpeed(speed) {
         this.animationSpeed = speed;
     }
+
+    updateProgress() {
+        const progressFill = document.getElementById('progressFill');
+        const currentStepDisplay = document.getElementById('currentStep');
+        const traversalResult = document.getElementById('traversalResult');
+        
+        const progress = this.traversalSteps.length ? 
+            (this.currentStep / this.traversalSteps.length) * 100 : 0;
+            
+        progressFill.style.width = `${progress}%`;
+        currentStepDisplay.textContent = `Step ${this.currentStep} of ${this.traversalSteps.length}`;
+        
+        const visitedNodes = this.traversalSteps
+            .slice(0, this.currentStep)
+            .filter(step => step.action === 'visit')
+            .map(step => step.node);
+            
+        traversalResult.textContent = `Visited: ${visitedNodes.join(' → ') || 'None'}`;
+    }
 }
 
-// UI Controller
+// AVLTreeUI Class
 class AVLTreeUI {
     constructor() {
         this.tree = new AVLTree();
-        this.highlightedNode = null;
-        this.selectedNode = null;
         this.traversalAnimator = new TraversalAnimator(this);
         this.zoom = 1;
         this.pan = { x: 0, y: 0 };
         this.isDragging = false;
         this.dragStart = { x: 0, y: 0 };
-        this.init();
-    }
-
-    init() {
-        this.setupEventListeners();
-        this.setupThemeToggle();
-        this.setupModal();
-        this.setupTraversalControls();
+        this.highlightedNode = null;
+        
         this.initializeNavigation();
+        this.initializeControls();
+        this.setupThemeToggle();
         this.setupZoomControls();
+        this.setupModal();
         this.render();
+        this.displayLogs();
     }
 
-    setupEventListeners() {
-        // Insert button
+    initializeControls() {
+        // Insert
         document.getElementById('insertBtn').addEventListener('click', () => {
             const input = document.getElementById('inputValue');
             const value = parseInt(input.value);
@@ -750,7 +648,7 @@ class AVLTreeUI {
             }
         });
 
-        // Delete button
+        // Delete
         document.getElementById('deleteBtn').addEventListener('click', () => {
             const input = document.getElementById('inputValue');
             const value = parseInt(input.value);
@@ -762,186 +660,51 @@ class AVLTreeUI {
             }
         });
 
-        // Search button
+        // Search
         document.getElementById('searchBtn').addEventListener('click', () => {
             const input = document.getElementById('searchValue');
             const value = parseInt(input.value);
             if (!isNaN(value)) {
-                this.highlightedNode = null;
-                const found = this.tree.search(this.tree.root, value);
-                if (found) {
-                    this.highlightedNode = value;
-                    setTimeout(() => {
-                        this.highlightedNode = null;
-                        this.render();
-                    }, 2000);
-                }
-                this.render();
+                this.tree.search(this.tree.root, value);
                 this.displayLogs();
                 input.value = '';
             }
         });
 
-        // Traversal buttons
-        document.getElementById('inOrderBtn').addEventListener('click', () => {
-            const result = this.tree.inOrderTraversal(this.tree.root);
-            this.tree.logOperation('In-order Traversal', `Result: [${result.join(', ')}]`, {
-                type: 'traversal',
-                method: 'in-order',
-                result: result,
-                algorithm: `In-order Traversal Algorithm:\n1. Traverse left subtree\n2. Visit root node\n3. Traverse right subtree\nResult: Left -> Root -> Right`,
-                complexity: 'O(n)'
-            }, 'info');
-            this.displayLogs();
-        });
-
-        document.getElementById('preOrderBtn').addEventListener('click', () => {
-            const result = this.tree.preOrderTraversal(this.tree.root);
-            this.tree.logOperation('Pre-order Traversal', `Result: [${result.join(', ')}]`, {
-                type: 'traversal',
-                method: 'pre-order',
-                result: result,
-                algorithm: `Pre-order Traversal Algorithm:\n1. Visit root node\n2. Traverse left subtree\n3. Traverse right subtree\nResult: Root -> Left -> Right`,
-                complexity: 'O(n)'
-            }, 'info');
-            this.displayLogs();
-        });
-
-        document.getElementById('postOrderBtn').addEventListener('click', () => {
-            const result = this.tree.postOrderTraversal(this.tree.root);
-            this.tree.logOperation('Post-order Traversal', `Result: [${result.join(', ')}]`, {
-                type: 'traversal',
-                method: 'post-order',
-                result: result,
-                algorithm: `Post-order Traversal Algorithm:\n1. Traverse left subtree\n2. Traverse right subtree\n3. Visit root node\nResult: Left -> Right -> Root`,
-                complexity: 'O(n)'
-            }, 'info');
-            this.displayLogs();
-        });
-
-        // Operations buttons
+        // Generate Random
         document.getElementById('randomBtn').addEventListener('click', () => {
-            const values = Array.from({ length: 10 }, () => Math.floor(Math.random() * 100));
-            this.tree.logOperation('Generate Random', `Creating tree with values: [${values.join(', ')}]`, {
+            const count = Math.floor(Math.random() * 10) + 5;
+            this.tree.root = null;
+            this.tree.clearLog();
+            for (let i = 0; i < count; i++) {
+                const value = Math.floor(Math.random() * 100);
+                this.tree.root = this.tree.insert(this.tree.root, value);
+            }
+            this.tree.logOperation('Generate Random', `Generated tree with ${count} random nodes`, {
                 type: 'generate',
-                values: values,
-                algorithm: `Random Tree Generation:\n1. Generated 10 random values (0-99)\n2. Inserting values one by one\n3. Tree will auto-balance after each insertion`,
+                count: count,
+                algorithm: `Generated ${count} random values and inserted them`,
                 complexity: 'O(n log n)'
             }, 'info');
-            
-            this.tree.root = null;
-            values.forEach(value => {
-                this.tree.root = this.tree.insert(this.tree.root, value);
-            });
             this.render();
             this.displayLogs();
         });
 
-        document.getElementById('exportBtn').addEventListener('click', () => {
-            if (!this.tree.root) {
-                this.tree.logOperation('Export Failed', 'Tree is empty', {
-                    type: 'export',
-                    success: false,
-                    algorithm: `Cannot export an empty tree\nInsert some nodes first`,
-                    complexity: 'O(1)'
-                }, 'error');
-                this.displayLogs();
-                return;
-            }
-
-            const values = this.tree.inOrderTraversal(this.tree.root);
-            const data = JSON.stringify(values, null, 2);
-            const blob = new Blob([data], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'avl-tree.json';
-            a.click();
-            URL.revokeObjectURL(url);
-
-            this.tree.logOperation('Export Success', `Exported tree with values: [${values.join(', ')}]`, {
-                type: 'export',
-                success: true,
-                values: values,
-                algorithm: `Export Algorithm:\n1. Perform in-order traversal to get sorted values\n2. Convert to JSON format\n3. Create downloadable file\n4. File contains array of node values`,
-                complexity: 'O(n)'
-            }, 'success');
-            this.displayLogs();
-        });
-
-        document.getElementById('importBtn').addEventListener('click', () => {
-            document.getElementById('fileInput').click();
-        });
-
-        document.getElementById('fileInput').addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                try {
-                    const values = JSON.parse(e.target.result);
-                    this.tree.logOperation('Import Start', `Importing values: [${values.join(', ')}]`, {
-                        type: 'import',
-                        values: values,
-                        algorithm: `Import Algorithm:\n1. Parse JSON file\n2. Validate array of numbers\n3. Clear existing tree\n4. Insert each value with auto-balancing`,
-                        complexity: 'O(n log n)'
-                    }, 'info');
-                    
-                    this.tree.root = null;
-                    values.forEach(value => {
-                        if (typeof value === 'number') {
-                            this.tree.root = this.tree.insert(this.tree.root, value);
-                        }
-                    });
-                    this.render();
-                    this.displayLogs();
-                } catch (error) {
-                    this.tree.logOperation('Import Failed', 'Invalid file format', {
-                        type: 'import',
-                        success: false,
-                        error: error.message,
-                        algorithm: `Import failed due to:\n1. Invalid JSON format\n2. File doesn't contain array of numbers\n3. Corrupted file data`,
-                        complexity: 'O(1)'
-                    }, 'error');
-                    this.displayLogs();
-                }
-            };
-            reader.readAsText(file);
-        });
-
+        // Reset
         document.getElementById('resetBtn').addEventListener('click', () => {
             this.tree.root = null;
             this.tree.clearLog();
-            this.highlightedNode = null;
-            this.selectedNode = null;
             this.traversalAnimator.stop();
+            this.tree.logOperation('Reset', 'Cleared all nodes from the tree', {
+                type: 'reset',
+                algorithm: 'Set root to null and clear operation log',
+                complexity: 'O(1)'
+            }, 'error');
             this.render();
             this.displayLogs();
-            this.tree.logOperation('Tree Reset', 'Tree has been cleared', {
-                type: 'reset',
-                algorithm: `Reset Algorithm:\n1. Set root to null\n2. Clear operation log\n3. Clear any highlighted nodes\n4. Re-render empty tree`,
-                complexity: 'O(1)'
-            }, 'info');
-            this.displayLogs();
         });
 
-        // Enter key support
-        document.getElementById('inputValue').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                document.getElementById('insertBtn').click();
-            }
-        });
-
-        document.getElementById('searchValue').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                document.getElementById('searchBtn').click();
-            }
-        });
-    }
-
-    setupTraversalControls() {
-        // Visual traversal buttons
+        // Traversal Visualization Controls
         document.getElementById('inOrderVisualBtn').addEventListener('click', () => {
             this.traversalAnimator.start('in-order');
         });
@@ -1279,8 +1042,6 @@ class AVLTreeUI {
             case 'balance': return 'warning';
             case 'traversal': return 'info';
             case 'traversal-step': return 'info';
-            case 'export': return 'info';
-            case 'import': return 'info';
             case 'reset': return 'error';
             case 'duplicate': return 'warning';
             case 'generate': return 'info';
